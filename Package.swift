@@ -15,6 +15,10 @@ let package = Package(
                 .linkedFramework("Accelerate"),
                 .linkedFramework("CoreGraphics"),
             ]
+        ),
+        .testTarget(
+            name: "BeaconTests",
+            dependencies: ["Beacon"]
         )
     ]
 )

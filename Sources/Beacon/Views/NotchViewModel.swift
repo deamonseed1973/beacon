@@ -4,10 +4,15 @@ import SwiftUI
 
 @MainActor
 final class NotchViewModel: ObservableObject {
+    @Published var layout: NotchLayout
     @Published var appName: String = ""
     @Published var appIcon: NSImage?
     @Published var report: AuditReport?
     @Published var annotatedScreenshot: NSImage?
+
+    init(layout: NotchLayout) {
+        self.layout = layout
+    }
 
     var healthScore: HealthScore {
         report?.healthScore ?? .good

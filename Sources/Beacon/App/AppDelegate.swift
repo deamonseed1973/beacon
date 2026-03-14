@@ -20,9 +20,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let monitor = AppMonitor()
         self.appMonitor = monitor
 
-        let viewModel = NotchViewModel()
+        let viewModel = NotchViewModel(layout: window.layout)
+        window.onLayoutChange = { [weak viewModel] layout in
+            viewModel?.layout = layout
+        }
 
-        let hostingController = NotchHostingController(viewModel: viewModel)
+        let hostingController = NotchHostingController(
+            viewModel: viewModel,
+            onExpansionChanged: { [weak window] isExpanded in
+                window?.setExpanded(isExpanded)
+            }
+        )
         window.contentViewController = hostingController
         window.orderFrontRegardless()
 
@@ -32,7 +40,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak viewModel] runningApp in
                 guard let viewModel = viewModel else { return }
                 let appName = runningApp.localizedName ?? "Unknown"
-                let bundleID = runningApp.bundleIdentifier ?? ""
 
                 viewModel.appName = appName
                 viewModel.appIcon = runningApp.icon

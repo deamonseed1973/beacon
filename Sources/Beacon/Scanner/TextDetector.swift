@@ -63,13 +63,13 @@ final class TextDetector: Sendable {
         sobelXKernel.withUnsafeBufferPointer { xPtr in
             _ = vImageConvolve_Planar8(
                 &sourceBuffer, &sobelXBuffer, nil, 0, 0,
-                xPtr.baseAddress!, 3, 3, 0, vImage_Flags(kvImageEdgeExtend)
+                xPtr.baseAddress!, 3, 3, 0, 0, vImage_Flags(kvImageEdgeExtend)
             )
         }
         sobelYKernel.withUnsafeBufferPointer { yPtr in
             _ = vImageConvolve_Planar8(
                 &sourceBuffer, &sobelYBuffer, nil, 0, 0,
-                yPtr.baseAddress!, 3, 3, 0, vImage_Flags(kvImageEdgeExtend)
+                yPtr.baseAddress!, 3, 3, 0, 0, vImage_Flags(kvImageEdgeExtend)
             )
         }
 

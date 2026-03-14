@@ -4,19 +4,19 @@ struct ExpandedView: View {
     @ObservedObject var viewModel: NotchViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             // App info row
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
                 if let icon = viewModel.appIcon {
                     Image(nsImage: icon)
                         .resizable()
-                        .frame(width: 24, height: 24)
-                        .cornerRadius(4)
+                        .frame(width: 34, height: 34)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
 
                 Text(viewModel.appName)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.white)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
                     .lineLimit(1)
 
                 Spacer()
@@ -25,52 +25,65 @@ struct ExpandedView: View {
             // Issue summary
             if let report = viewModel.report {
                 Text(issueSummary(report))
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.7))
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.72))
 
                 // Annotated screenshot thumbnail
                 if let screenshot = viewModel.annotatedScreenshot {
                     Image(nsImage: screenshot)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 60)
-                        .cornerRadius(4)
+                        .frame(maxHeight: 72)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 4)
+                            RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.white.opacity(0.2), lineWidth: 1)
                         )
                 }
 
                 // Export button
                 Button(action: exportReport) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 6) {
                         Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12, weight: .semibold))
                         Text("Export Report")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 12, weight: .semibold))
                     }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
                     .background(
                         Capsule()
-                            .fill(Color.white.opacity(0.15))
+                            .fill(Color.white.opacity(0.14))
                     )
                 }
                 .buttonStyle(.plain)
             } else if viewModel.isScanning {
                 Text("Scanning...")
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.5))
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.55))
             }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .frame(width: viewModel.layout.expandedSize.width, height: viewModel.layout.expandedSize.height, alignment: .topLeading)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.black.opacity(0.9))
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.black.opacity(0.96),
+                            Color.black.opacity(0.88)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                }
         )
-        .padding(.horizontal, 4)
+        .shadow(color: .black.opacity(0.32), radius: 22, y: 10)
     }
 
     private func issueSummary(_ report: AuditReport) -> String {

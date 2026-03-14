@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 final class NotchHostingController: NSHostingController<NotchView> {
-    init(viewModel: NotchViewModel) {
-        super.init(rootView: NotchView(viewModel: viewModel))
+    init(viewModel: NotchViewModel, onExpansionChanged: @escaping (Bool) -> Void) {
+        super.init(rootView: NotchView(viewModel: viewModel, onExpansionChanged: onExpansionChanged))
     }
 
     @MainActor @preconcurrency required dynamic init?(coder: NSCoder) {
