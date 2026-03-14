@@ -9,6 +9,12 @@ final class NotchViewModel: ObservableObject {
     @Published var appIcon: NSImage?
     @Published var report: AuditReport?
     @Published var annotatedScreenshot: NSImage?
+    @Published var isScanning = false
+
+    var exportAction: () -> Void = {}
+    var captureAction: () -> Void = {}
+    var captureShortcut = ""
+    var toggleShortcut = ""
 
     init(layout: NotchLayout) {
         self.layout = layout
@@ -20,9 +26,5 @@ final class NotchViewModel: ObservableObject {
 
     var issueCount: Int {
         report?.issues.count ?? 0
-    }
-
-    var isScanning: Bool {
-        report == nil && !appName.isEmpty
     }
 }

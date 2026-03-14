@@ -17,10 +17,10 @@ struct NotchGeometryTests {
         #expect(layout.cutoutFrame.width == 188)
         #expect(layout.cutoutFrame.height == 37)
         #expect(layout.cutoutFrame.midX == 756)
-        #expect(layout.compactAnchorFrame.maxY == 982)
+        #expect(layout.compactAnchorFrame.maxY == layout.cutoutFrame.minY + NotchChromeMetrics.compactTopInsetFromCutoutBottom)
         #expect(layout.expandedFrame.midX == layout.cutoutFrame.midX)
         #expect(layout.windowFrame.minY == layout.expandedFrame.minY)
-        #expect(layout.windowFrame.maxY == 982)
+        #expect(layout.windowFrame.maxY == layout.compactAnchorFrame.maxY.rounded(.up))
     }
 
     @Test("Falls back to a centred anchor on non-notched screens")
@@ -38,7 +38,7 @@ struct NotchGeometryTests {
         #expect(layout.cutoutFrame.height == NotchChromeMetrics.fallbackAnchorHeight)
         #expect(layout.cutoutFrame.midX == metrics.frame.midX)
         #expect(layout.windowFrame.minY == layout.compactAnchorFrame.minY)
-        #expect(layout.windowFrame.maxY == metrics.frame.maxY)
+        #expect(layout.windowFrame.maxY == layout.compactAnchorFrame.maxY.rounded(.up))
     }
 
     @Test("Expanded and compact frames remain centre-aligned")

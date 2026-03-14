@@ -4,7 +4,7 @@ struct ExpandedView: View {
     @ObservedObject var viewModel: NotchViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             // App info row
             HStack(spacing: 10) {
                 if let icon = viewModel.appIcon {
@@ -42,27 +42,29 @@ struct ExpandedView: View {
                 }
 
                 // Export button
-                Button(action: exportReport) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text("Export Report")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(
-                        Capsule()
-                            .fill(Color.white.opacity(0.14))
+                HStack(spacing: 8) {
+                    actionButton(
+                        title: "Capture Now",
+                        systemImage: "camera.aperture",
+                        shortcut: viewModel.captureShortcut,
+                        action: viewModel.captureAction
+                    )
+                    actionButton(
+                        title: "Export Report",
+                        systemImage: "square.and.arrow.up",
+                        shortcut: nil,
+                        action: exportReport
                     )
                 }
-                .buttonStyle(.plain)
             } else if viewModel.isScanning {
                 Text("Scanning...")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.white.opacity(0.55))
             }
+
+            Text("Toggle Beacon: \(viewModel.toggleShortcut)")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.white.opacity(0.4))
         }
         .padding(16)
         .frame(width: viewModel.layout.expandedSize.width, height: viewModel.layout.expandedSize.height, alignment: .topLeading)
@@ -86,6 +88,41 @@ struct ExpandedView: View {
         .shadow(color: .black.opacity(0.32), radius: 22, y: 10)
     }
 
+    private func actionButton(
+        title: String,
+        systemImage: String,
+        shortcut: String?,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 12, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                if let shortcut {
+                    Text(shortcut)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.65))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(Color.white.opacity(0.08))
+                        )
+                }
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(Color.white.opacity(0.14))
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
     private func issueSummary(_ report: AuditReport) -> String {
         let count = report.issues.count
         if count == 0 {
@@ -95,13 +132,6 @@ struct ExpandedView: View {
     }
 
     private func exportReport() {
-        guard let report = viewModel.report else { return }
-        let annotatedImage = viewModel.annotatedScreenshot
-        let exporter = ReportExporter()
-        do {
-            try exporter.export(report: report, annotatedImage: annotatedImage)
-        } catch {
-            NSLog("Beacon: Export failed: \(error)")
-        }
+        viewModel.exportAction()
     }
 }

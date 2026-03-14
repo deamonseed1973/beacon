@@ -16,6 +16,7 @@ struct NotchView: View {
                     issueCount: viewModel.issueCount,
                     isScanning: viewModel.isScanning
                 )
+                .fixedSize()
 
                 if isExpanded {
                     ExpandedView(viewModel: viewModel)

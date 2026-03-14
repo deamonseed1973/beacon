@@ -7,8 +7,8 @@ enum NotchChromeMetrics {
     static let compactMinWidth: CGFloat = 112
     static let compactMaxWidth: CGFloat = 148
     static let compactHeight: CGFloat = 38
-    static let compactOverlap: CGFloat = 8
     static let compactBridgeOverlap: CGFloat = 6
+    static let compactTopInsetFromCutoutBottom: CGFloat = -3
     static let expandedWidth: CGFloat = 208
     static let expandedHeight: CGFloat = 176
     static let compactToExpandedSpacing: CGFloat = 8
@@ -58,8 +58,10 @@ struct NotchLayout {
     }
 
     static func make(for metrics: ScreenMetrics, isExpanded: Bool) -> NotchLayout {
-        let screenFrame = metrics.frame
         let cutoutFrame = cutoutFrame(for: metrics)
+        let compactVisibleHeight = NotchChromeMetrics.bridgeHeight
+            + NotchChromeMetrics.compactHeight
+            - NotchChromeMetrics.compactBridgeOverlap
         let bridgeWidth = min(
             max(cutoutFrame.width - 12, NotchChromeMetrics.bridgeMinWidth),
             NotchChromeMetrics.bridgeMaxWidth
@@ -69,12 +71,13 @@ struct NotchLayout {
             NotchChromeMetrics.compactMaxWidth
         )
 
-        let compactY = cutoutFrame.minY - NotchChromeMetrics.compactHeight + NotchChromeMetrics.compactOverlap
+        let compactTop = cutoutFrame.minY + NotchChromeMetrics.compactTopInsetFromCutoutBottom
+        let compactY = compactTop - compactVisibleHeight
         let compactAnchorFrame = CGRect(
             x: cutoutFrame.midX - compactTrayWidth / 2,
             y: compactY,
             width: compactTrayWidth,
-            height: screenFrame.maxY - compactY
+            height: compactVisibleHeight
         )
 
         let expandedWidth = max(NotchChromeMetrics.expandedWidth, compactTrayWidth + 60)
@@ -86,12 +89,7 @@ struct NotchLayout {
         )
 
         let visibleFrame = isExpanded ? compactAnchorFrame.union(expandedFrame) : compactAnchorFrame
-        let windowFrame = CGRect(
-            x: visibleFrame.minX,
-            y: visibleFrame.minY,
-            width: visibleFrame.width,
-            height: screenFrame.maxY - visibleFrame.minY
-        )
+        let windowFrame = visibleFrame.integral
 
         return NotchLayout(
             cutoutFrame: cutoutFrame,

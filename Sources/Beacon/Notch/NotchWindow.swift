@@ -6,6 +6,7 @@ final class NotchWindow: NSWindow {
     private var currentScreen: NSScreen
     private var isExpanded = false
     private var screenObserver: NSObjectProtocol?
+    private(set) var isOverlayVisible = true
 
     var onLayoutChange: ((NotchLayout) -> Void)?
 
@@ -41,6 +42,16 @@ final class NotchWindow: NSWindow {
         updateLayout(for: currentScreen, isExpanded: expanded, animated: true)
     }
 
+    func toggleVisibility() {
+        if isOverlayVisible {
+            orderOut(nil)
+        } else {
+            setFrame(layout.windowFrame, display: true)
+            orderFrontRegardless()
+        }
+        isOverlayVisible.toggle()
+    }
+
     func updateLayout(for screen: NSScreen, isExpanded: Bool) {
         updateLayout(for: screen, isExpanded: isExpanded, animated: false)
     }
@@ -60,6 +71,10 @@ final class NotchWindow: NSWindow {
         titlebarAppearsTransparent = true
         titleVisibility = .hidden
     }
+
+    override var canBecomeKey: Bool { false }
+
+    override var canBecomeMain: Bool { false }
 
     private func startObservingScreens() {
         screenObserver = NotificationCenter.default.addObserver(

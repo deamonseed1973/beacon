@@ -48,9 +48,11 @@ struct CompactView: View {
                             .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
                     }
             }
+            .clipShape(Capsule(style: .continuous))
             .shadow(color: .black.opacity(0.35), radius: 18, y: 8)
         }
         .frame(width: layout.compactSize.width, height: layout.compactSize.height, alignment: .top)
+        .compositingGroup()
     }
 
     private var countLabel: String {
