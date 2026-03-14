@@ -2,6 +2,8 @@ import AppKit
 import Carbon
 
 private let keyCodeToCharacterMap: [UInt32: String] = [
+    UInt32(kVK_ANSI_A): "A",
+    UInt32(kVK_ANSI_B): "B",
     UInt32(kVK_Return): "↩",
     UInt32(kVK_Tab): "⇥",
     UInt32(kVK_Space): "⎵",
@@ -77,35 +79,5 @@ func hotKeyDisplayString(keyCode: UInt32, modifiers: NSEvent.ModifierFlags) -> S
         return value + mapped
     }
 
-    guard let inputSource = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue()
-        ?? TISCopyCurrentASCIICapableKeyboardLayoutInputSource()?.takeRetainedValue(),
-        let layoutData = TISGetInputSourceProperty(inputSource, kTISPropertyUnicodeKeyLayoutData)
-    else {
-        return value
-    }
-
-    let keyboardLayout = unsafeBitCast(layoutData, to: CFData.self)
-    guard let bytes = CFDataGetBytePtr(keyboardLayout) else { return value }
-    let layout = UnsafePointer<UCKeyboardLayout>(OpaquePointer(bytes))
-
-    var deadKeyState: UInt32 = 0
-    let maxLength: UniCharCount = 4
-    var actualLength: UniCharCount = 0
-    var characters = [UniChar](repeating: 0, count: Int(maxLength))
-
-    let status = UCKeyTranslate(
-        layout,
-        keyCode,
-        UInt16(kUCKeyActionDown),
-        carbonModifierFlags(from: modifiers) >> 8,
-        UInt32(LMGetKbdType()),
-        OptionBits(kUCKeyTranslateNoDeadKeysBit),
-        &deadKeyState,
-        maxLength,
-        &actualLength,
-        &characters
-    )
-
-    guard status == noErr, actualLength > 0 else { return value }
-    return value + String(utf16CodeUnits: characters, count: Int(actualLength))
+    return value + "?"
 }

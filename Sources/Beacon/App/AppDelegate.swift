@@ -127,23 +127,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func registerHotKeys(with inspectionCoordinator: InspectionCoordinator, window: NotchWindow) {
         if let captureHotKey = HotKeyCenter.shared.registerHotKey(
             keyCode: UInt32(kVK_ANSI_A),
-            modifierFlags: [.option, .shift]
-        ) { _ in
+            modifierFlags: [.option, .shift],
+            task: { _ in
             Task { @MainActor in
                 inspectionCoordinator.captureCurrentReport()
             }
-        } {
+        }) {
             hotKeys.append(captureHotKey)
         }
 
         if let toggleHotKey = HotKeyCenter.shared.registerHotKey(
             keyCode: UInt32(kVK_ANSI_B),
-            modifierFlags: [.option, .shift]
-        ) { _ in
+            modifierFlags: [.option, .shift],
+            task: { _ in
             Task { @MainActor in
                 window.toggleVisibility()
             }
-        } {
+        }) {
             hotKeys.append(toggleHotKey)
         }
     }

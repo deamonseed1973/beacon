@@ -34,7 +34,7 @@ protocol HotKeyRegistrar {
 
 struct CarbonHotKeyRegistrar: HotKeyRegistrar {
     func registerHotKey(keyCode: UInt32, modifiers: UInt32, hotKeyID: UInt32, signature: OSType) -> EventHotKeyRef? {
-        var eventHotKeyID = EventHotKeyID(signature: signature, id: hotKeyID)
+        let eventHotKeyID = EventHotKeyID(signature: signature, id: hotKeyID)
         var hotKeyRef: EventHotKeyRef?
         let status = RegisterEventHotKey(keyCode, modifiers, eventHotKeyID, GetEventDispatcherTarget(), 0, &hotKeyRef)
         guard status == noErr else { return nil }
@@ -137,12 +137,11 @@ final class HotKeyCenter {
         guard status == noErr else { return status }
         guard let hotKey = registeredHotKeys.first(where: { $0.hotKeyID == hotKeyID.id }) else { return noErr }
 
-        let carbonEvent = NSEvent(eventRef: event)
         let keyEvent = NSEvent.keyEvent(
             with: .keyUp,
-            location: carbonEvent?.locationInWindow ?? .zero,
-            modifierFlags: carbonEvent?.modifierFlags ?? hotKey.modifierFlags,
-            timestamp: carbonEvent?.timestamp ?? ProcessInfo.processInfo.systemUptime,
+            location: .zero,
+            modifierFlags: hotKey.modifierFlags,
+            timestamp: ProcessInfo.processInfo.systemUptime,
             windowNumber: -1,
             context: nil,
             characters: "",
@@ -157,7 +156,8 @@ final class HotKeyCenter {
     private func installEventHandlerIfNeeded() {
         guard !hotKeyEventHandlerInstalled else { return }
         var eventSpec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased))
-        InstallApplicationEventHandler(beaconHotKeyHandler, 1, &eventSpec, nil, nil)
+        var handlerRef: EventHandlerRef?
+        InstallEventHandler(GetApplicationEventTarget(), beaconHotKeyHandler, 1, &eventSpec, nil, &handlerRef)
         hotKeyEventHandlerInstalled = true
     }
 }
