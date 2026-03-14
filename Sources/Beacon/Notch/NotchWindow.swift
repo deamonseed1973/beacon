@@ -8,8 +8,8 @@ final class NotchWindow: NSWindow {
         self.notchRect = frame
 
         // Window is taller than the notch to accommodate expanded state
-        let expandedHeight: CGFloat = 180
-        let windowWidth = max(frame.width, 320)
+        let expandedHeight: CGFloat = 260
+        let windowWidth = max(frame.width, 460)
         let windowFrame = CGRect(
             x: frame.midX - windowWidth / 2,
             y: frame.minY - expandedHeight,

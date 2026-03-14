@@ -29,8 +29,8 @@ struct CompactView: View {
                     .foregroundColor(.white)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 7)
         .background(
             Capsule()
                 .fill(Color.black.opacity(0.85))
