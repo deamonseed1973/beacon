@@ -4,7 +4,7 @@ import CoreGraphics
 /// Draws labeled bounding boxes on a screenshot for accessibility issues.
 /// Inspired by Peekaboo's SmartLabelPlacer — uses simple quadrant-preference logic
 /// to place labels without overlapping each other.
-final class ScreenAnnotator {
+final class ScreenAnnotator: @unchecked Sendable {
     struct AnnotationStyle {
         var gapColor: NSColor = .systemRed
         var mismatchColor: NSColor = .systemOrange

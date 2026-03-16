@@ -49,7 +49,7 @@ final class NotchWindow: NSWindow {
         guard expanded != isExpanded else { return }
         isExpanded = expanded
         onExpandedStateChange?(expanded)
-        updateLayout(for: currentScreen, isExpanded: expanded, animated: true)
+        updateLayout(for: currentScreen, isExpanded: expanded, animated: false)
     }
 
     func toggleVisibility() {

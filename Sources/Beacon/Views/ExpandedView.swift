@@ -8,7 +8,7 @@ struct ExpandedView: View {
         VStack(alignment: .leading, spacing: 12) {
             header
             summaryRow
-            screenshotCard
+            contentCard
             actionRow
             footer
         }
@@ -44,16 +44,21 @@ struct ExpandedView: View {
                     }
             }
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(viewModel.appName.isEmpty ? "Waiting for a foreground app" : viewModel.appName)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
 
-                Text(statusHeadline)
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(statusColor.opacity(0.9))
-                    .lineLimit(1)
+                Label {
+                    Text(statusHeadline)
+                        .lineLimit(1)
+                } icon: {
+                    Image(systemName: statusSymbol)
+                }
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(statusColor.opacity(0.92))
+                .labelStyle(.titleAndIcon)
             }
 
             Spacer()
@@ -64,30 +69,47 @@ struct ExpandedView: View {
 
     private var summaryRow: some View {
         HStack(spacing: 10) {
-            statTile(title: "Issues", value: issueValue, accent: statusColor)
+            issuesButtonTile
             statTile(title: "State", value: stateValue, accent: Color.white.opacity(0.78))
         }
     }
 
     @ViewBuilder
-    private var screenshotCard: some View {
-        Group {
-            if let screenshot = viewModel.annotatedScreenshot {
-                GeometryReader { proxy in
-                    let size = screenshot.size
-                    let aspectRatio = size.height > 0 ? size.width / size.height : 1.6
+    private var contentCard: some View {
+        switch viewModel.expandedContentMode {
+        case .preview:
+            previewCard
+        case .issues:
+            issuesListCard
+        }
+    }
 
-                    ZStack(alignment: .bottomLeading) {
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(Color.black.opacity(0.18))
+    private var previewCard: some View {
+        Button {
+            viewModel.expandedContentMode = .preview
+            viewModel.previewAnnotatedScreenshotAction()
+        } label: {
+            Group {
+                if let screenshot = viewModel.annotatedScreenshot {
+                    GeometryReader { proxy in
+                        let size = screenshot.size
+                        let aspectRatio = size.height > 0 ? size.width / size.height : 1.6
 
-                        Image(nsImage: screenshot)
-                            .resizable()
-                            .aspectRatio(aspectRatio, contentMode: .fit)
-                            .frame(width: proxy.size.width, height: proxy.size.height)
-                            .clipped()
+                        ZStack(alignment: .bottomLeading) {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color.black.opacity(0.18))
 
-                        Text(screenshotCaption)
+                            Image(nsImage: screenshot)
+                                .resizable()
+                                .aspectRatio(aspectRatio, contentMode: .fit)
+                                .frame(width: proxy.size.width, height: proxy.size.height)
+                                .clipped()
+
+                            HStack(spacing: 8) {
+                                Text(screenshotCaption)
+                                Spacer(minLength: 8)
+                                Label("Quick Look", systemImage: "arrow.up.left.and.arrow.down.right")
+                            }
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.white.opacity(0.82))
                             .padding(.horizontal, 10)
@@ -97,43 +119,112 @@ struct ExpandedView: View {
                                     .fill(Color.black.opacity(0.48))
                             )
                             .padding(10)
+                        }
                     }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 164)
-            } else {
-                ZStack(alignment: .bottomLeading) {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.08),
-                                    Color.white.opacity(0.03)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 164)
+                } else {
+                    ZStack(alignment: .bottomLeading) {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.08),
+                                        Color.white.opacity(0.03)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Image(systemName: viewModel.isScanning ? "waveform.path.ecg" : "photo.on.rectangle.angled")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(Color.white.opacity(0.7))
-                        Text(emptyScreenshotTitle)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.white)
-                        Text(emptyScreenshotMessage)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color.white.opacity(0.6))
-                            .fixedSize(horizontal: false, vertical: true)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Image(systemName: viewModel.isScanning ? "waveform.path.ecg" : "photo.on.rectangle.angled")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(Color.white.opacity(0.7))
+                            Text(emptyScreenshotTitle)
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.white)
+                            Text(emptyScreenshotMessage)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Color.white.opacity(0.6))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(14)
                     }
-                    .padding(14)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 164)
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 164)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .buttonStyle(.plain)
+        .disabled(viewModel.annotatedScreenshot == nil)
+        .opacity(viewModel.annotatedScreenshot == nil ? 0.92 : 1)
+    }
+
+    private var issuesListCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Issue List", systemImage: "list.bullet.rectangle.portrait")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                Button {
+                    withAnimation(.easeOut(duration: 0.18)) {
+                        viewModel.expandedContentMode = .preview
+                    }
+                } label: {
+                    Label("Preview", systemImage: "photo")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.82))
+                }
+                .buttonStyle(.plain)
+            }
+
+            if viewModel.issues.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("No issues in the current report")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white)
+                    Text("Capture a fresh report to inspect accessibility gaps for the frontmost window.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.58))
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else {
+                ScrollView {
+                    VStack(spacing: 8) {
+                        ForEach(viewModel.issues, id: \.index) { issue in
+                            issueRow(issue)
+                        }
+                    }
+                    .padding(.trailing, 2)
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity)
+        .frame(height: 164, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.08),
+                            Color.white.opacity(0.03)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(Color.white.opacity(0.08), lineWidth: 1)
@@ -144,16 +235,19 @@ struct ExpandedView: View {
         HStack(spacing: 8) {
             actionButton(
                 title: "Capture",
+                subtitle: viewModel.captureShortcut,
                 systemImage: "camera.aperture",
                 action: viewModel.captureAction
             )
             actionButton(
                 title: "Export",
+                subtitle: nil,
                 systemImage: "square.and.arrow.up",
                 action: exportReport
             )
             actionButton(
                 title: "Reports",
+                subtitle: nil,
                 systemImage: "folder",
                 action: openReportsFolder
             )
@@ -161,31 +255,22 @@ struct ExpandedView: View {
     }
 
     private var footer: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(footerText)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.white.opacity(0.58))
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            HStack(spacing: 8) {
-                shortcutBadge(viewModel.captureShortcut)
-                shortcutBadge(viewModel.toggleShortcut)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        Text(footerText)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(Color.white.opacity(0.58))
+            .lineLimit(3)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var statusBadge: some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(statusColor)
-                .frame(width: 8, height: 8)
-
+            Image(systemName: statusSymbol)
+                .font(.system(size: 10, weight: .bold))
             Text(statusBadgeTitle)
                 .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
         }
+        .foregroundStyle(.white)
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
         .background(
@@ -198,7 +283,28 @@ struct ExpandedView: View {
         }
     }
 
-    private func statTile(title: String, value: String, accent: Color) -> some View {
+    private var issuesButtonTile: some View {
+        Button {
+            withAnimation(.easeOut(duration: 0.18)) {
+                viewModel.expandedContentMode = viewModel.expandedContentMode == .issues ? .preview : .issues
+            }
+        } label: {
+            statTile(
+                title: "Issues",
+                value: issueValue,
+                accent: statusColor,
+                isSelected: viewModel.expandedContentMode == .issues
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func statTile(
+        title: String,
+        value: String,
+        accent: Color,
+        isSelected: Bool = false
+    ) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title.uppercased())
                 .font(.system(size: 9, weight: .bold, design: .rounded))
@@ -215,26 +321,65 @@ struct ExpandedView: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.white.opacity(0.05))
+                .fill(isSelected ? accent.opacity(0.14) : Color.white.opacity(0.05))
         )
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(accent.opacity(0.18), lineWidth: 1)
+                .stroke(accent.opacity(isSelected ? 0.36 : 0.18), lineWidth: 1)
         }
+    }
+
+    private func issueRow(_ issue: AccessibilityIssue) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Text("#\(issue.index)")
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.6))
+
+                Text(issue.elementRole)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                Text(issue.issueType == .gap ? "Gap" : "Mismatch")
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(statusColor)
+            }
+
+            Text(issue.visualText.isEmpty ? "Visible text detected without a matching accessibility label." : issue.visualText)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.white.opacity(0.7))
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 9)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        )
     }
 
     private func actionButton(
         title: String,
+        subtitle: String?,
         systemImage: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            VStack(spacing: 6) {
+            VStack(spacing: 5) {
                 Image(systemName: systemImage)
                     .font(.system(size: 13, weight: .semibold))
                 Text(title)
                     .font(.system(size: 11, weight: .semibold))
                     .lineLimit(1)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.58))
+                        .lineLimit(1)
+                }
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
@@ -245,19 +390,6 @@ struct ExpandedView: View {
             )
         }
         .buttonStyle(.plain)
-    }
-
-    private func shortcutBadge(_ title: String) -> some View {
-        Text(title)
-            .font(.system(size: 10, weight: .bold, design: .rounded))
-            .foregroundStyle(Color.white.opacity(0.75))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 7)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(Color.white.opacity(0.08))
-            )
-            .fixedSize()
     }
 
     private var panelBackground: some View {
@@ -330,6 +462,18 @@ struct ExpandedView: View {
         }
     }
 
+    private var statusSymbol: String {
+        if viewModel.isScanning { return "dot.radiowaves.left.and.right" }
+        switch viewModel.healthScore {
+        case .good:
+            return "checkmark.circle.fill"
+        case .warning:
+            return "exclamationmark.triangle.fill"
+        case .critical:
+            return "xmark.octagon.fill"
+        }
+    }
+
     private var statusColor: Color {
         if viewModel.isScanning {
             return Color(red: 0.73, green: 0.76, blue: 0.82)
@@ -346,9 +490,9 @@ struct ExpandedView: View {
 
     private var footerText: String {
         if viewModel.isScanning {
-            return "Beacon is analysing the frontmost app."
+            return "Beacon is analysing the frontmost app. \(viewModel.toggleShortcut) hides or shows the notch UI."
         }
-        return "Capture to refresh now, or export the current accessibility report."
+        return "\(viewModel.captureShortcut) captures a fresh report. \(viewModel.toggleShortcut) hides or shows the notch UI."
     }
 
     private var screenshotCaption: String {

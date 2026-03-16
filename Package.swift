@@ -15,6 +15,7 @@ let package = Package(
                 .linkedFramework("Accelerate"),
                 .linkedFramework("CoreGraphics"),
                 .linkedFramework("Carbon"),
+                .linkedFramework("Quartz"),
             ]
         ),
         .testTarget(

@@ -6,6 +6,7 @@ import SwiftUI
 final class NotchViewModel: ObservableObject {
     @Published var layout: NotchLayout
     @Published var isExpanded = false
+    @Published var expandedContentMode: ExpandedPanelContentMode = .preview
     @Published var appName: String = ""
     @Published var appIcon: NSImage?
     @Published var report: AuditReport?
@@ -14,6 +15,7 @@ final class NotchViewModel: ObservableObject {
 
     var exportAction: () -> Void = {}
     var captureAction: () -> Void = {}
+    var previewAnnotatedScreenshotAction: () -> Void = {}
     var captureShortcut = ""
     var toggleShortcut = ""
 
@@ -27,5 +29,9 @@ final class NotchViewModel: ObservableObject {
 
     var issueCount: Int {
         report?.issues.count ?? 0
+    }
+
+    var issues: [AccessibilityIssue] {
+        report?.issues ?? []
     }
 }

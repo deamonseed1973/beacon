@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var notchWindow: NotchWindow?
     private var appMonitor: AppMonitor?
     private var inspectionCoordinator: InspectionCoordinator?
+    private var quickLookPreviewController: QuickLookPreviewController?
     private var hotKeys: [HotKey] = []
     private var cancellables = Set<AnyCancellable>()
 
@@ -22,6 +23,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let scanner = AccessibilityScanner()
         let annotator = ScreenAnnotator()
         let exporter = ReportExporter()
+        let quickLookPreviewController = QuickLookPreviewController()
+        self.quickLookPreviewController = quickLookPreviewController
         let beaconBundleIdentifier = Bundle.main.bundleIdentifier ?? "com.beacon.app"
         let monitor = AppMonitor(excludedBundleIdentifiers: [beaconBundleIdentifier])
         self.appMonitor = monitor
@@ -80,6 +83,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         viewModel.captureAction = { [weak inspectionCoordinator] in
             inspectionCoordinator?.captureCurrentReport()
         }
+        viewModel.previewAnnotatedScreenshotAction = { [weak viewModel, quickLookPreviewController] in
+            guard let screenshot = viewModel?.annotatedScreenshot else { return }
+            do {
+                try quickLookPreviewController.preview(
+                    image: screenshot,
+                    suggestedFileName: viewModel?.appName.isEmpty == false ? viewModel?.appName ?? "Beacon" : "Beacon"
+                )
+            } catch {
+                NSLog("Beacon: Quick Look preview failed: \(error)")
+            }
+        }
         viewModel.captureShortcut = hotKeyDisplayString(
             keyCode: UInt32(kVK_ANSI_A),
             modifiers: [.option, .shift]
@@ -117,12 +131,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         inspectionCoordinator.$latestReport
             .sink { [weak viewModel] report in
                 viewModel?.report = report
+                viewModel?.expandedContentMode = .preview
             }
             .store(in: &cancellables)
 
         inspectionCoordinator.$latestAnnotatedScreenshot
             .sink { [weak viewModel] screenshot in
                 viewModel?.annotatedScreenshot = screenshot
+                viewModel?.expandedContentMode = .preview
             }
             .store(in: &cancellables)
 
