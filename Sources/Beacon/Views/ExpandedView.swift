@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct ExpandedView: View {
@@ -18,6 +19,7 @@ struct ExpandedView: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
+                    .truncationMode(.tail)
 
                 Spacer()
             }
@@ -27,22 +29,29 @@ struct ExpandedView: View {
                 Text(issueSummary(report))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.white.opacity(0.72))
+                    .fixedSize(horizontal: false, vertical: true)
 
                 // Annotated screenshot thumbnail
                 if let screenshot = viewModel.annotatedScreenshot {
                     Image(nsImage: screenshot)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 72)
+                        .frame(maxWidth: .infinity, maxHeight: 72)
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
                         )
                 }
 
-                // Export button
+                // Action buttons
                 HStack(spacing: 8) {
+                    actionButton(
+                        title: "Reports",
+                        systemImage: "folder",
+                        shortcut: nil,
+                        action: openReportsFolder
+                    )
                     actionButton(
                         title: "Capture Now",
                         systemImage: "camera.aperture",
@@ -57,9 +66,18 @@ struct ExpandedView: View {
                     )
                 }
             } else if viewModel.isScanning {
-                Text("Scanning...")
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .scaleEffect(0.6)
+                        .frame(width: 14, height: 14)
+                    Text("Scanning accessibility tree…")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+            } else {
+                Text("Switch to an app to begin")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(.white.opacity(0.4))
             }
 
             Text("Toggle Beacon: \(viewModel.toggleShortcut)")
@@ -115,6 +133,7 @@ struct ExpandedView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
             .background(
                 Capsule(style: .continuous)
                     .fill(Color.white.opacity(0.14))
@@ -126,9 +145,15 @@ struct ExpandedView: View {
     private func issueSummary(_ report: AuditReport) -> String {
         let count = report.issues.count
         if count == 0 {
-            return "No accessibility gaps found"
+            return "✓ No accessibility gaps found"
         }
         return "\(count) accessibility gap\(count == 1 ? "" : "s") found"
+    }
+
+    private func openReportsFolder() {
+        let dir = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Desktop/beacon-reports")
+        NSWorkspace.shared.open(dir)
     }
 
     private func exportReport() {

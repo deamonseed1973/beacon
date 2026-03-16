@@ -9,8 +9,8 @@ enum NotchChromeMetrics {
     static let compactHeight: CGFloat = 38
     static let compactBridgeOverlap: CGFloat = 6
     static let compactTopInsetFromCutoutBottom: CGFloat = -3
-    static let expandedWidth: CGFloat = 208
-    static let expandedHeight: CGFloat = 176
+    static let expandedWidth: CGFloat = 460
+    static let expandedHeight: CGFloat = 260
     static let compactToExpandedSpacing: CGFloat = 8
     static let fallbackAnchorWidth: CGFloat = 108
     static let fallbackAnchorHeight: CGFloat = 14
