@@ -6,9 +6,12 @@ final class NotchWindow: NSWindow {
     private var currentScreen: NSScreen
     private var isExpanded = false
     private var screenObserver: NSObjectProtocol?
+    private var localEventMonitor: Any?
+    private var globalMouseMonitor: Any?
     private(set) var isOverlayVisible = true
 
     var onLayoutChange: ((NotchLayout) -> Void)?
+    var onExpandedStateChange: ((Bool) -> Void)?
 
     init(screen: NSScreen) {
         currentScreen = screen
@@ -34,11 +37,18 @@ final class NotchWindow: NSWindow {
         if let screenObserver {
             NotificationCenter.default.removeObserver(screenObserver)
         }
+        if let localEventMonitor {
+            NSEvent.removeMonitor(localEventMonitor)
+        }
+        if let globalMouseMonitor {
+            NSEvent.removeMonitor(globalMouseMonitor)
+        }
     }
 
     func setExpanded(_ expanded: Bool) {
         guard expanded != isExpanded else { return }
         isExpanded = expanded
+        onExpandedStateChange?(expanded)
         updateLayout(for: currentScreen, isExpanded: expanded, animated: true)
     }
 
@@ -70,6 +80,8 @@ final class NotchWindow: NSWindow {
         ignoresMouseEvents = false
         titlebarAppearsTransparent = true
         titleVisibility = .hidden
+        acceptsMouseMovedEvents = true
+        startObservingDismissEvents()
     }
 
     override var canBecomeKey: Bool { false }
@@ -107,6 +119,45 @@ final class NotchWindow: NSWindow {
             }
         } else {
             applyFrame()
+        }
+    }
+
+    private func startObservingDismissEvents() {
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown, .keyDown]
+        ) { [weak self] event in
+            guard let self else { return event }
+            guard self.isExpanded else { return event }
+
+            switch event.type {
+            case .keyDown:
+                if event.keyCode == 53 {
+                    self.setExpanded(false)
+                    return nil
+                }
+            case .leftMouseDown, .rightMouseDown, .otherMouseDown:
+                if let window = event.window, window === self {
+                    return event
+                }
+                if !self.frame.contains(event.locationInWindow) {
+                    self.setExpanded(false)
+                }
+            default:
+                break
+            }
+
+            return event
+        }
+
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        ) { [weak self] event in
+            guard let self, self.isExpanded else { return }
+            if !self.frame.contains(event.locationInWindow) {
+                Task { @MainActor [weak self] in
+                    self?.setExpanded(false)
+                }
+            }
         }
     }
 }

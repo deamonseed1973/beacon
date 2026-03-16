@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 final class NotchViewModel: ObservableObject {
     @Published var layout: NotchLayout
+    @Published var isExpanded = false
     @Published var appName: String = ""
     @Published var appIcon: NSImage?
     @Published var report: AuditReport?

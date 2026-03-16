@@ -52,6 +52,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.onLayoutChange = { [weak viewModel] layout in
             viewModel?.layout = layout
         }
+        window.onExpandedStateChange = { [weak viewModel] isExpanded in
+            viewModel?.isExpanded = isExpanded
+        }
         viewModel.exportAction = { [weak inspectionCoordinator] in
             do {
                 try inspectionCoordinator?.exportCurrentReport()

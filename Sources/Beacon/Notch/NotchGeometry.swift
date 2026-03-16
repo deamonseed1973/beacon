@@ -1,18 +1,19 @@
 import AppKit
 
 enum NotchChromeMetrics {
-    static let bridgeMinWidth: CGFloat = 72
-    static let bridgeMaxWidth: CGFloat = 132
-    static let bridgeHeight: CGFloat = 14
-    static let compactMinWidth: CGFloat = 112
-    static let compactMaxWidth: CGFloat = 148
-    static let compactHeight: CGFloat = 38
-    static let compactBridgeOverlap: CGFloat = 6
-    static let compactTopInsetFromCutoutBottom: CGFloat = -3
-    static let expandedWidth: CGFloat = 460
-    static let expandedHeight: CGFloat = 260
-    static let compactToExpandedSpacing: CGFloat = 8
-    static let fallbackAnchorWidth: CGFloat = 108
+    static let bridgeMinWidth: CGFloat = 74
+    static let bridgeMaxWidth: CGFloat = 136
+    static let bridgeHeight: CGFloat = 15
+    static let compactMinWidth: CGFloat = 128
+    static let compactMaxWidth: CGFloat = 164
+    static let compactHeight: CGFloat = 42
+    static let compactBridgeOverlap: CGFloat = 7
+    static let compactTopInsetFromCutoutBottom: CGFloat = -2
+    static let expandedMinWidth: CGFloat = 412
+    static let expandedMaxWidth: CGFloat = 448
+    static let expandedHeight: CGFloat = 244
+    static let compactToExpandedSpacing: CGFloat = 10
+    static let fallbackAnchorWidth: CGFloat = 116
     static let fallbackAnchorHeight: CGFloat = 14
 }
 
@@ -80,7 +81,10 @@ struct NotchLayout {
             height: compactVisibleHeight
         )
 
-        let expandedWidth = max(NotchChromeMetrics.expandedWidth, compactTrayWidth + 60)
+        let expandedWidth = min(
+            max(NotchChromeMetrics.expandedMinWidth, compactTrayWidth + 248),
+            NotchChromeMetrics.expandedMaxWidth
+        )
         let expandedFrame = CGRect(
             x: cutoutFrame.midX - expandedWidth / 2,
             y: compactY - NotchChromeMetrics.compactToExpandedSpacing - NotchChromeMetrics.expandedHeight,
