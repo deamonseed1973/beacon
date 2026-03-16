@@ -98,6 +98,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             keyCode: UInt32(kVK_ANSI_A),
             modifiers: [.option, .shift]
         )
+        viewModel.exportShortcut = hotKeyDisplayString(
+            keyCode: UInt32(kVK_ANSI_E),
+            modifiers: [.option, .shift]
+        )
+        viewModel.reportsShortcut = hotKeyDisplayString(
+            keyCode: UInt32(kVK_ANSI_R),
+            modifiers: [.option, .shift]
+        )
         viewModel.toggleShortcut = hotKeyDisplayString(
             keyCode: UInt32(kVK_ANSI_B),
             modifiers: [.option, .shift]
@@ -179,6 +187,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }) {
             hotKeys.append(toggleHotKey)
+        }
+
+        if let exportHotKey = HotKeyCenter.shared.registerHotKey(
+            keyCode: UInt32(kVK_ANSI_E),
+            modifierFlags: [.option, .shift],
+            task: { _ in
+            Task { @MainActor in
+                do {
+                    try inspectionCoordinator.exportCurrentReport()
+                } catch {
+                    NSLog("Beacon: Export failed: \(error)")
+                }
+            }
+        }) {
+            hotKeys.append(exportHotKey)
+        }
+
+        if let reportsHotKey = HotKeyCenter.shared.registerHotKey(
+            keyCode: UInt32(kVK_ANSI_R),
+            modifierFlags: [.option, .shift],
+            task: { _ in
+            Task { @MainActor in
+                let reportsDirectory = FileManager.default.homeDirectoryForCurrentUser
+                    .appendingPathComponent("Desktop/beacon-reports")
+                NSWorkspace.shared.open(reportsDirectory)
+            }
+        }) {
+            hotKeys.append(reportsHotKey)
         }
     }
 }

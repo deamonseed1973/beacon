@@ -30,6 +30,13 @@ struct HotKeyCenterTests {
         #expect(converted & UInt32(cmdKey) == 0)
     }
 
+    @Test("Displays letter hotkeys with modifier symbols")
+    func hotKeyDisplayStringForLetters() {
+        #expect(hotKeyDisplayString(keyCode: UInt32(kVK_ANSI_A), modifiers: [.option, .shift]) == "⌥⇧A")
+        #expect(hotKeyDisplayString(keyCode: UInt32(kVK_ANSI_E), modifiers: [.option, .shift]) == "⌥⇧E")
+        #expect(hotKeyDisplayString(keyCode: UInt32(kVK_ANSI_R), modifiers: [.option, .shift]) == "⌥⇧R")
+    }
+
     @Test("Rejects duplicate hotkey registrations")
     func duplicateRegistration() {
         let registrar = StubHotKeyRegistrar()
@@ -55,5 +62,21 @@ struct HotKeyCenterTests {
 
         #expect(center.registeredHotKeysSet().isEmpty)
         #expect(registrar.unregisteredCount == 2)
+    }
+
+    @Test("Registers multiple distinct hotkeys")
+    func multipleRegistration() {
+        let registrar = StubHotKeyRegistrar()
+        let center = HotKeyCenter(registrar: registrar, installsEventHandler: false)
+
+        let capture = center.registerHotKey(keyCode: UInt32(kVK_ANSI_A), modifierFlags: [.option, .shift]) { _ in }
+        let export = center.registerHotKey(keyCode: UInt32(kVK_ANSI_E), modifierFlags: [.option, .shift]) { _ in }
+        let reports = center.registerHotKey(keyCode: UInt32(kVK_ANSI_R), modifierFlags: [.option, .shift]) { _ in }
+
+        #expect(capture != nil)
+        #expect(export != nil)
+        #expect(reports != nil)
+        #expect(registrar.registeredIDs == [1, 2, 3])
+        #expect(center.registeredHotKeysSet().count == 3)
     }
 }

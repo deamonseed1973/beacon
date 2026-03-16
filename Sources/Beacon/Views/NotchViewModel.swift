@@ -17,6 +17,8 @@ final class NotchViewModel: ObservableObject {
     var captureAction: () -> Void = {}
     var previewAnnotatedScreenshotAction: () -> Void = {}
     var captureShortcut = ""
+    var exportShortcut = ""
+    var reportsShortcut = ""
     var toggleShortcut = ""
 
     init(layout: NotchLayout) {

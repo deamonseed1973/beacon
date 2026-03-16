@@ -241,13 +241,13 @@ struct ExpandedView: View {
             )
             actionButton(
                 title: "Export",
-                subtitle: nil,
+                subtitle: viewModel.exportShortcut,
                 systemImage: "square.and.arrow.up",
                 action: exportReport
             )
             actionButton(
                 title: "Reports",
-                subtitle: nil,
+                subtitle: viewModel.reportsShortcut,
                 systemImage: "folder",
                 action: openReportsFolder
             )
