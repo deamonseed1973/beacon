@@ -5,6 +5,7 @@ private let keyCodeToCharacterMap: [UInt32: String] = [
     UInt32(kVK_ANSI_A): "A",
     UInt32(kVK_ANSI_B): "B",
     UInt32(kVK_ANSI_E): "E",
+    UInt32(kVK_ANSI_Q): "Q",
     UInt32(kVK_ANSI_R): "R",
     UInt32(kVK_Return): "↩",
     UInt32(kVK_Tab): "⇥",

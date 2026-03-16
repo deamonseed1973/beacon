@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var appMonitor: AppMonitor?
     private var inspectionCoordinator: InspectionCoordinator?
     private var quickLookPreviewController: QuickLookPreviewController?
+    private var isShowingQuitConfirmation = false
     private var hotKeys: [HotKey] = []
     private var cancellables = Set<AnyCancellable>()
 
@@ -215,6 +216,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }) {
             hotKeys.append(reportsHotKey)
+        }
+
+        if let quitHotKey = HotKeyCenter.shared.registerHotKey(
+            keyCode: UInt32(kVK_ANSI_Q),
+            modifierFlags: [.option, .shift],
+            task: { [weak self] _ in
+            Task { @MainActor in
+                self?.confirmQuit()
+            }
+        }) {
+            hotKeys.append(quitHotKey)
+        }
+    }
+
+    @MainActor
+    private func confirmQuit() {
+        guard !isShowingQuitConfirmation else { return }
+        isShowingQuitConfirmation = true
+        defer { isShowingQuitConfirmation = false }
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Quit Beacon?"
+        alert.informativeText = "Beacon will stop monitoring the frontmost app until you launch it again."
+        alert.addButton(withTitle: "Quit")
+        alert.addButton(withTitle: "Cancel")
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            NSApp.terminate(nil)
         }
     }
 }

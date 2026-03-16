@@ -34,6 +34,7 @@ struct HotKeyCenterTests {
     func hotKeyDisplayStringForLetters() {
         #expect(hotKeyDisplayString(keyCode: UInt32(kVK_ANSI_A), modifiers: [.option, .shift]) == "⌥⇧A")
         #expect(hotKeyDisplayString(keyCode: UInt32(kVK_ANSI_E), modifiers: [.option, .shift]) == "⌥⇧E")
+        #expect(hotKeyDisplayString(keyCode: UInt32(kVK_ANSI_Q), modifiers: [.option, .shift]) == "⌥⇧Q")
         #expect(hotKeyDisplayString(keyCode: UInt32(kVK_ANSI_R), modifiers: [.option, .shift]) == "⌥⇧R")
     }
 
