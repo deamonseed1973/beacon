@@ -1,20 +1,22 @@
 import AppKit
 
 enum NotchChromeMetrics {
-    static let bridgeMinWidth: CGFloat = 74
-    static let bridgeMaxWidth: CGFloat = 136
-    static let bridgeHeight: CGFloat = 15
-    static let compactMinWidth: CGFloat = 128
-    static let compactMaxWidth: CGFloat = 164
-    static let compactHeight: CGFloat = 42
-    static let compactBridgeOverlap: CGFloat = 7
+    static let compactMinWidth: CGFloat = 252
+    static let compactMaxWidth: CGFloat = 315
+    static let compactHeight: CGFloat = 54
     static let compactTopInsetFromCutoutBottom: CGFloat = -2
     static let expandedMinWidth: CGFloat = 412
     static let expandedMaxWidth: CGFloat = 448
-    static let expandedHeight: CGFloat = 244
+    static let expandedHeight: CGFloat = 456
     static let compactToExpandedSpacing: CGFloat = 10
     static let fallbackAnchorWidth: CGFloat = 116
     static let fallbackAnchorHeight: CGFloat = 14
+    static let compactOverflowTop: CGFloat = 14
+    static let compactOverflowBottom: CGFloat = 24
+    static let compactOverflowHorizontal: CGFloat = 16
+    static let expandedOverflowTop: CGFloat = 12
+    static let expandedOverflowBottom: CGFloat = 44
+    static let expandedOverflowHorizontal: CGFloat = 22
 }
 
 struct ScreenMetrics {
@@ -47,12 +49,24 @@ struct NotchLayout {
     let cutoutFrame: CGRect
     let compactAnchorFrame: CGRect
     let expandedFrame: CGRect
+    let contentFrame: CGRect
     let windowFrame: CGRect
-    let bridgeWidth: CGFloat
     let compactTrayWidth: CGFloat
 
     var compactSize: CGSize { compactAnchorFrame.size }
     var expandedSize: CGSize { expandedFrame.size }
+    var compactOriginInWindow: CGPoint {
+        CGPoint(
+            x: compactAnchorFrame.minX - windowFrame.minX,
+            y: windowFrame.maxY - compactAnchorFrame.maxY
+        )
+    }
+    var expandedOriginInWindow: CGPoint {
+        CGPoint(
+            x: expandedFrame.minX - windowFrame.minX,
+            y: windowFrame.maxY - expandedFrame.maxY
+        )
+    }
 
     static func make(for screen: NSScreen, isExpanded: Bool) -> NotchLayout {
         make(for: ScreenMetrics(screen: screen), isExpanded: isExpanded)
@@ -60,25 +74,18 @@ struct NotchLayout {
 
     static func make(for metrics: ScreenMetrics, isExpanded: Bool) -> NotchLayout {
         let cutoutFrame = cutoutFrame(for: metrics)
-        let compactVisibleHeight = NotchChromeMetrics.bridgeHeight
-            + NotchChromeMetrics.compactHeight
-            - NotchChromeMetrics.compactBridgeOverlap
-        let bridgeWidth = min(
-            max(cutoutFrame.width - 12, NotchChromeMetrics.bridgeMinWidth),
-            NotchChromeMetrics.bridgeMaxWidth
-        )
         let compactTrayWidth = min(
-            max(cutoutFrame.width + 20, NotchChromeMetrics.compactMinWidth),
+            max(cutoutFrame.width + 28, NotchChromeMetrics.compactMinWidth),
             NotchChromeMetrics.compactMaxWidth
         )
 
         let compactTop = cutoutFrame.minY + NotchChromeMetrics.compactTopInsetFromCutoutBottom
-        let compactY = compactTop - compactVisibleHeight
+        let compactY = compactTop - NotchChromeMetrics.compactHeight
         let compactAnchorFrame = CGRect(
             x: cutoutFrame.midX - compactTrayWidth / 2,
             y: compactY,
             width: compactTrayWidth,
-            height: compactVisibleHeight
+            height: NotchChromeMetrics.compactHeight
         )
 
         let expandedWidth = min(
@@ -92,15 +99,43 @@ struct NotchLayout {
             height: NotchChromeMetrics.expandedHeight
         )
 
-        let visibleFrame = isExpanded ? compactAnchorFrame.union(expandedFrame) : compactAnchorFrame
-        let windowFrame = visibleFrame.integral
+        let contentFrame = isExpanded ? compactAnchorFrame.union(expandedFrame) : compactAnchorFrame
+        let compactOverflow = compactAnchorFrame.insetBy(
+            dx: -NotchChromeMetrics.compactOverflowHorizontal,
+            dy: 0
+        ).offsetBy(dx: 0, dy: 0)
+        let compactOverflowFrame = CGRect(
+            x: compactOverflow.minX,
+            y: compactAnchorFrame.minY - NotchChromeMetrics.compactOverflowBottom,
+            width: compactOverflow.width,
+            height: compactAnchorFrame.height
+                + NotchChromeMetrics.compactOverflowTop
+                + NotchChromeMetrics.compactOverflowBottom
+        )
+
+        let overflowBounds: CGRect
+        if isExpanded {
+            let expandedOverflowFrame = CGRect(
+                x: expandedFrame.minX - NotchChromeMetrics.expandedOverflowHorizontal,
+                y: expandedFrame.minY - NotchChromeMetrics.expandedOverflowBottom,
+                width: expandedFrame.width + (NotchChromeMetrics.expandedOverflowHorizontal * 2),
+                height: expandedFrame.height
+                    + NotchChromeMetrics.expandedOverflowTop
+                    + NotchChromeMetrics.expandedOverflowBottom
+            )
+            overflowBounds = compactOverflowFrame.union(expandedOverflowFrame)
+        } else {
+            overflowBounds = compactOverflowFrame
+        }
+
+        let windowFrame = overflowBounds.integral
 
         return NotchLayout(
             cutoutFrame: cutoutFrame,
             compactAnchorFrame: compactAnchorFrame,
             expandedFrame: expandedFrame,
+            contentFrame: contentFrame,
             windowFrame: windowFrame,
-            bridgeWidth: bridgeWidth,
             compactTrayWidth: compactTrayWidth
         )
     }

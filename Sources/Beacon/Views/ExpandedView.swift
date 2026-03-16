@@ -5,7 +5,7 @@ struct ExpandedView: View {
     @ObservedObject var viewModel: NotchViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             header
             summaryRow
             screenshotCard
@@ -14,7 +14,7 @@ struct ExpandedView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 16)
-        .padding(.bottom, 14)
+        .padding(.bottom, 16)
         .frame(
             width: viewModel.layout.expandedSize.width,
             height: viewModel.layout.expandedSize.height,
@@ -73,13 +73,20 @@ struct ExpandedView: View {
     private var screenshotCard: some View {
         Group {
             if let screenshot = viewModel.annotatedScreenshot {
-                Image(nsImage: screenshot)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 98)
-                    .clipped()
-                    .overlay(alignment: .bottomLeading) {
+                GeometryReader { proxy in
+                    let size = screenshot.size
+                    let aspectRatio = size.height > 0 ? size.width / size.height : 1.6
+
+                    ZStack(alignment: .bottomLeading) {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color.black.opacity(0.18))
+
+                        Image(nsImage: screenshot)
+                            .resizable()
+                            .aspectRatio(aspectRatio, contentMode: .fit)
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipped()
+
                         Text(screenshotCaption)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.white.opacity(0.82))
@@ -91,6 +98,9 @@ struct ExpandedView: View {
                             )
                             .padding(10)
                     }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 164)
             } else {
                 ZStack(alignment: .bottomLeading) {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -120,7 +130,7 @@ struct ExpandedView: View {
                     .padding(14)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 98)
+                .frame(height: 164)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -151,17 +161,19 @@ struct ExpandedView: View {
     }
 
     private var footer: some View {
-        HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(footerText)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.white.opacity(0.58))
                 .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
 
-            Spacer(minLength: 8)
-
-            shortcutBadge(viewModel.captureShortcut)
-            shortcutBadge(viewModel.toggleShortcut)
+            HStack(spacing: 8) {
+                shortcutBadge(viewModel.captureShortcut)
+                shortcutBadge(viewModel.toggleShortcut)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var statusBadge: some View {
@@ -226,7 +238,7 @@ struct ExpandedView: View {
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            .padding(.vertical, 9)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(Color.white.opacity(0.07))
@@ -240,11 +252,12 @@ struct ExpandedView: View {
             .font(.system(size: 10, weight: .bold, design: .rounded))
             .foregroundStyle(Color.white.opacity(0.75))
             .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.vertical, 7)
             .background(
                 Capsule(style: .continuous)
                     .fill(Color.white.opacity(0.08))
             )
+            .fixedSize()
     }
 
     private var panelBackground: some View {

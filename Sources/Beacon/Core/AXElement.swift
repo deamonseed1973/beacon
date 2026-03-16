@@ -40,6 +40,11 @@ struct AXElement: @unchecked Sendable {
         return kids.map { AXElement(underlying: $0) }
     }
 
+    var focusedWindow: AXElement? {
+        guard let window: AXUIElement = attribute(.focusedWindow) else { return nil }
+        return AXElement(underlying: window)
+    }
+
     /// The combined text content of this element (title, value, label).
     var textContent: String {
         [title, value, label].compactMap { $0 }.joined(separator: " ").trimmingCharacters(in: .whitespaces)

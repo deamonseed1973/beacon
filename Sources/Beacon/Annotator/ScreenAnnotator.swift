@@ -21,8 +21,8 @@ final class ScreenAnnotator {
     }
 
     /// Annotate a screenshot with issue bounding boxes and labels.
-    func annotate(screenshot: CGImage, issues: [AccessibilityIssue]) -> NSImage {
-        let size = NSSize(width: screenshot.width, height: screenshot.height)
+    func annotate(screenshot: CGImage, issues: [AccessibilityIssue], capturedFrame: CGRect) -> NSImage {
+        let size = CGSize(width: screenshot.width, height: screenshot.height)
         let image = NSImage(size: size)
 
         image.lockFocus()
@@ -31,29 +31,24 @@ final class ScreenAnnotator {
             return NSImage(cgImage: screenshot, size: size)
         }
 
-        // Draw original screenshot
         context.draw(screenshot, in: CGRect(origin: .zero, size: size))
 
         var placedLabels: [CGRect] = []
+        let imageBounds = CGRect(origin: .zero, size: size)
 
         for issue in issues {
             let color = issue.issueType == .gap ? style.gapColor : style.mismatchColor
-
-            // Convert frame: flip Y since CGContext has bottom-left origin matching
-            let issueFrame = issue.frame.cgRect
-            let rect = CGRect(
-                x: issueFrame.origin.x,
-                y: CGFloat(screenshot.height) - issueFrame.origin.y - issueFrame.height,
-                width: issueFrame.width,
-                height: issueFrame.height
+            let rect = annotationRect(
+                for: issue.frame.cgRect,
+                capturedFrame: capturedFrame,
+                imageSize: size
             )
+            guard rect.intersects(imageBounds) else { continue }
 
-            // Draw bounding box
             context.setStrokeColor(color.cgColor)
             context.setLineWidth(style.borderWidth)
             context.stroke(rect)
 
-            // Place label
             let labelText = "\(issue.elementRole) #\(issue.index)"
             let labelRect = bestLabelPosition(
                 for: rect,
@@ -62,18 +57,14 @@ final class ScreenAnnotator {
                 existing: placedLabels
             )
 
-            // Draw label background
             context.setFillColor(style.labelBackground.cgColor)
             context.fill(labelRect)
 
-            // Draw label text
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: style.labelFont,
                 .foregroundColor: style.labelTextColor,
             ]
-            let nsString = labelText as NSString
-            let textRect = labelRect.insetBy(dx: 3, dy: 1)
-            nsString.draw(in: textRect, withAttributes: attributes)
+            (labelText as NSString).draw(in: labelRect.insetBy(dx: 3, dy: 1), withAttributes: attributes)
 
             placedLabels.append(labelRect)
         }
@@ -82,19 +73,31 @@ final class ScreenAnnotator {
         return image
     }
 
-    /// Find a non-overlapping position for a label near the given rect.
-    /// Tries top-left, top-right, bottom-left, bottom-right in order.
+    func annotationRect(for issueFrame: CGRect, capturedFrame: CGRect, imageSize: CGSize) -> CGRect {
+        let scaleX = imageSize.width / max(capturedFrame.width, 1)
+        let scaleY = imageSize.height / max(capturedFrame.height, 1)
+
+        let localX = (issueFrame.minX - capturedFrame.minX) * scaleX
+        let localY = (capturedFrame.maxY - issueFrame.maxY) * scaleY
+
+        return CGRect(
+            x: localX,
+            y: localY,
+            width: issueFrame.width * scaleX,
+            height: issueFrame.height * scaleY
+        )
+    }
+
     private func bestLabelPosition(
         for elementRect: CGRect,
         text: String,
-        imageSize: NSSize,
+        imageSize: CGSize,
         existing: [CGRect]
     ) -> CGRect {
         let attributes: [NSAttributedString.Key: Any] = [.font: style.labelFont]
         let textSize = (text as NSString).size(withAttributes: attributes)
         let labelSize = CGSize(width: textSize.width + 6, height: textSize.height + 2)
 
-        // Candidate positions: above-left, above-right, below-left, below-right
         let candidates: [CGRect] = [
             CGRect(x: elementRect.minX, y: elementRect.maxY + 2,
                    width: labelSize.width, height: labelSize.height),
@@ -108,7 +111,6 @@ final class ScreenAnnotator {
 
         let imageBounds = CGRect(origin: .zero, size: imageSize)
 
-        // Pick first candidate that doesn't overlap existing labels and is within bounds
         for candidate in candidates {
             if imageBounds.contains(candidate) &&
                !existing.contains(where: { $0.intersects(candidate) }) {
@@ -116,7 +118,6 @@ final class ScreenAnnotator {
             }
         }
 
-        // Fallback: first candidate, clamped to image bounds
         var fallback = candidates[0]
         fallback.origin.x = max(0, min(fallback.origin.x, imageSize.width - fallback.width))
         fallback.origin.y = max(0, min(fallback.origin.y, imageSize.height - fallback.height))

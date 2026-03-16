@@ -6,34 +6,16 @@ struct NotchView: View {
     @State private var isHoveringCompact = false
 
     var body: some View {
-        ZStack(alignment: .top) {
+        ZStack(alignment: .topLeading) {
             Color.clear
 
-            VStack(spacing: NotchChromeMetrics.compactToExpandedSpacing) {
-                Button {
-                    toggleExpansion()
-                } label: {
-                    CompactView(
-                        layout: viewModel.layout,
-                        healthScore: viewModel.healthScore,
-                        issueCount: viewModel.issueCount,
-                        isScanning: viewModel.isScanning,
-                        isExpanded: viewModel.isExpanded,
-                        isHovering: isHoveringCompact
-                    )
-                }
-                .buttonStyle(.plain)
-                .contentShape(Rectangle())
-                .onHover { hovering in
-                    withAnimation(.easeOut(duration: 0.18)) {
-                        isHoveringCompact = hovering
-                    }
-                }
+            compactButton
+                .offset(
+                    x: viewModel.layout.compactOriginInWindow.x,
+                    y: viewModel.layout.compactOriginInWindow.y
+                )
 
-                expandedPanel
-            }
-            .frame(maxWidth: .infinity, alignment: .top)
-            .padding(.top, 2)
+            expandedPanel
         }
         .frame(
             width: viewModel.layout.windowFrame.width,
@@ -43,10 +25,36 @@ struct NotchView: View {
         .animation(.spring(response: 0.34, dampingFraction: 0.86), value: viewModel.isExpanded)
     }
 
+    private var compactButton: some View {
+        Button {
+            toggleExpansion()
+        } label: {
+            CompactView(
+                layout: viewModel.layout,
+                healthScore: viewModel.healthScore,
+                issueCount: viewModel.issueCount,
+                isScanning: viewModel.isScanning,
+                isExpanded: viewModel.isExpanded,
+                isHovering: isHoveringCompact
+            )
+        }
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.18)) {
+                isHoveringCompact = hovering
+            }
+        }
+    }
+
     @ViewBuilder
     private var expandedPanel: some View {
         if viewModel.isExpanded {
             ExpandedView(viewModel: viewModel)
+                .offset(
+                    x: viewModel.layout.expandedOriginInWindow.x,
+                    y: viewModel.layout.expandedOriginInWindow.y
+                )
                 .transition(
                     .asymmetric(
                         insertion: .opacity.combined(with: .scale(scale: 0.96, anchor: .top)),

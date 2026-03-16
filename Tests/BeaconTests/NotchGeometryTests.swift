@@ -17,10 +17,17 @@ struct NotchGeometryTests {
         #expect(layout.cutoutFrame.width == 188)
         #expect(layout.cutoutFrame.height == 37)
         #expect(layout.cutoutFrame.midX == 756)
+        #expect(layout.compactAnchorFrame.width == 252)
         #expect(layout.compactAnchorFrame.maxY == layout.cutoutFrame.minY + NotchChromeMetrics.compactTopInsetFromCutoutBottom)
         #expect(layout.expandedFrame.midX == layout.cutoutFrame.midX)
-        #expect(layout.windowFrame.minY == layout.expandedFrame.minY)
-        #expect(layout.windowFrame.maxY == layout.compactAnchorFrame.maxY.rounded(.up))
+        #expect(layout.expandedFrame.height == NotchChromeMetrics.expandedHeight)
+        #expect(layout.expandedFrame.height > 420)
+        #expect(layout.windowFrame.width > layout.contentFrame.width)
+        #expect(layout.windowFrame.height > layout.contentFrame.height)
+        #expect(layout.compactOriginInWindow.y > 0)
+        #expect(layout.expandedOriginInWindow.y > 0)
+        #expect(layout.windowFrame.minY < layout.expandedFrame.minY)
+        #expect(layout.windowFrame.maxY > layout.compactAnchorFrame.maxY.rounded(.up))
     }
 
     @Test("Falls back to a centred anchor on non-notched screens")
@@ -37,8 +44,9 @@ struct NotchGeometryTests {
         #expect(layout.cutoutFrame.width == NotchChromeMetrics.fallbackAnchorWidth)
         #expect(layout.cutoutFrame.height == NotchChromeMetrics.fallbackAnchorHeight)
         #expect(layout.cutoutFrame.midX == metrics.frame.midX)
-        #expect(layout.windowFrame.minY == layout.compactAnchorFrame.minY)
-        #expect(layout.windowFrame.maxY == layout.compactAnchorFrame.maxY.rounded(.up))
+        #expect(layout.compactAnchorFrame.width == 252)
+        #expect(layout.windowFrame.minY < layout.compactAnchorFrame.minY)
+        #expect(layout.windowFrame.maxY > layout.compactAnchorFrame.maxY.rounded(.up))
     }
 
     @Test("Expanded and compact frames remain centre-aligned")
@@ -53,9 +61,10 @@ struct NotchGeometryTests {
         let compactLayout = NotchLayout.make(for: metrics, isExpanded: false)
         let expandedLayout = NotchLayout.make(for: metrics, isExpanded: true)
 
-        #expect(compactLayout.windowFrame.width == compactLayout.compactAnchorFrame.width)
-        #expect(expandedLayout.windowFrame.width == expandedLayout.expandedFrame.width)
+        #expect(compactLayout.windowFrame.width > compactLayout.compactAnchorFrame.width)
+        #expect(expandedLayout.windowFrame.width > expandedLayout.expandedFrame.width)
         #expect(compactLayout.compactAnchorFrame.midX == compactLayout.cutoutFrame.midX)
         #expect(expandedLayout.compactAnchorFrame.midX == expandedLayout.expandedFrame.midX)
+        #expect(expandedLayout.expandedFrame.height == NotchChromeMetrics.expandedHeight)
     }
 }

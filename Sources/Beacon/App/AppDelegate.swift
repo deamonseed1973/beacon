@@ -33,14 +33,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     return nil
                 }
 
-                let report = await scanner.scan(app: app)
+                let initialWindow = ElementCapture.resolveFrontmostWindow(for: app)
+                let scanResult = await scanner.scan(
+                    app: app,
+                    windowFrameHint: initialWindow?.frame
+                )
+                let capture = ElementCapture.captureFrontmostWindow(
+                    for: app,
+                    preferredFrame: scanResult.windowFrame
+                ) ?? initialWindow.flatMap(ElementCapture.captureWindow)
                 let annotatedScreenshot: NSImage?
-                if let screenshot = ElementCapture.captureFullScreen() {
-                    annotatedScreenshot = annotator.annotate(screenshot: screenshot, issues: report.issues)
+                if let capture {
+                    annotatedScreenshot = annotator.annotate(
+                        screenshot: capture.image,
+                        issues: scanResult.report.issues,
+                        capturedFrame: capture.frame
+                    )
                 } else {
                     annotatedScreenshot = nil
                 }
-                return InspectionSnapshot(report: report, annotatedScreenshot: annotatedScreenshot)
+                return InspectionSnapshot(
+                    report: scanResult.report,
+                    annotatedScreenshot: annotatedScreenshot
+                )
             },
             exportHandler: { report, annotatedImage in
                 try exporter.export(report: report, annotatedImage: annotatedImage)
