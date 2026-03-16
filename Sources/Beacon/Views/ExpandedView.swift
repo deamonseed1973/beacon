@@ -525,9 +525,7 @@ struct ExpandedView: View {
     }
 
     private func openReportsFolder() {
-        let dir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Desktop/beacon-reports")
-        NSWorkspace.shared.open(dir)
+        viewModel.reportsAction()
     }
 
     private func exportReport() {

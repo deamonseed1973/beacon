@@ -81,6 +81,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSLog("Beacon: Export failed: \(error)")
             }
         }
+        viewModel.reportsAction = { [weak window] in
+            let reportsDirectory = FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent("Desktop/beacon-reports")
+            NSWorkspace.shared.open(reportsDirectory)
+            window?.setExpanded(false)
+        }
         viewModel.captureAction = { [weak inspectionCoordinator] in
             inspectionCoordinator?.captureCurrentReport()
         }
@@ -208,11 +214,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let reportsHotKey = HotKeyCenter.shared.registerHotKey(
             keyCode: UInt32(kVK_ANSI_R),
             modifierFlags: [.option, .shift],
-            task: { _ in
+            task: { [weak window] _ in
             Task { @MainActor in
                 let reportsDirectory = FileManager.default.homeDirectoryForCurrentUser
                     .appendingPathComponent("Desktop/beacon-reports")
                 NSWorkspace.shared.open(reportsDirectory)
+                window?.setExpanded(false)
             }
         }) {
             hotKeys.append(reportsHotKey)

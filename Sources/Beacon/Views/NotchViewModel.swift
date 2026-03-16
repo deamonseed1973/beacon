@@ -14,6 +14,7 @@ final class NotchViewModel: ObservableObject {
     @Published var isScanning = false
 
     var exportAction: () -> Void = {}
+    var reportsAction: () -> Void = {}
     var captureAction: () -> Void = {}
     var previewAnnotatedScreenshotAction: () -> Void = {}
     var captureShortcut = ""
